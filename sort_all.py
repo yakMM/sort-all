@@ -164,14 +164,8 @@ def _fix_src(contents_text: str, fname: Path) -> str:
 
 
 def fix_file(filename: Path, write: bool = True, error_on_fix: bool = True) -> int:
-    with open(filename, "rb") as f:
-        contents_bytes = f.read()
-
-    try:
-        contents_text = contents_bytes.decode()
-    except UnicodeDecodeError:
-        print(f"{filename} is non-utf8 (not supported)")
-        return 1
+    with open(filename, "r") as f:
+        contents_text = f.read()
 
     new_content = _fix_src(contents_text, filename)
     if new_content == contents_text:
@@ -184,8 +178,8 @@ def fix_file(filename: Path, write: bool = True, error_on_fix: bool = True) -> i
         return retv
 
     print(f"Rewriting {filename}")
-    with open(filename, "wb") as f:
-        f.write(new_content.encode())
+    with open(filename, "w") as f:
+        f.write(new_content)
 
     return retv
 
