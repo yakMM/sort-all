@@ -4,6 +4,7 @@ import sys
 import warnings
 from collections.abc import Sequence
 from operator import attrgetter
+from pathlib import Path
 from typing import Optional
 
 from tokenize_rt import Offset, Token, src_to_tokens, tokens_to_src
@@ -109,7 +110,7 @@ def scan(tokens: list[Token], start: int, pos: Offset) -> int:
     return start + idx
 
 
-def _fix_src(contents_text: str, fname: str) -> str:
+def _fix_src(contents_text: str, fname: Path) -> str:
     try:
         ast_obj = ast_parse(contents_text)
     except SyntaxError:
@@ -162,7 +163,7 @@ def _fix_src(contents_text: str, fname: str) -> str:
     return "".join(chunks)
 
 
-def fix_file(filename: str, write: bool = True, error_on_fix: bool = True) -> int:
+def fix_file(filename: Path, write: bool = True, error_on_fix: bool = True) -> int:
     with open(filename, "rb") as f:
         contents_bytes = f.read()
 
@@ -205,18 +206,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         action="store_true",
         help="return 0 even if errors are occurred during processing files",
     )
-    parser.add_argument("filenames", nargs="*", help="Files to process")
+    parser.add_argument("modules", nargs="*", help="Modules to process")
     args = parser.parse_args(argv)
 
     retv = 0
-    for filename in args.filenames:
-        if not filename.endswith((".py", ".pyx", ".pyi", ".pyd")):
-            continue
-        retv |= fix_file(
-            filename,
-            write=not args.check,
-            error_on_fix=not args.no_error_on_fix,
-        )
+    for module in args.modules:
+        for path_obj in Path(module).rglob("*.py*"):
+            if not filename.endswith((".py", ".pyx", ".pyi", ".pyd")):
+                continue
+            retv |= fix_file(
+                filename,
+                write=not args.check,
+                error_on_fix=not args.no_error_on_fix,
+            )
     return retv
 
 
